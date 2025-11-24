@@ -8,8 +8,24 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    {% block content %}{% endblock %}
+    <!-- Optional: Basic Navigation (Uncomment when ready) -->
+    <!--
+    <nav style="background: #0070f3; padding: 1rem; color: white; display: flex; gap: 1rem; align-items: center;">
+        <a href="/" style="color: white; text-decoration: none;">Home</a>
+        {% if user %}
+            <span>Welcome, {{ user.username }} ({{ user.role }})!</span>
+            <a href="/logout" style="color: white; text-decoration: none;">Logout</a>
+        {% else %}
+            <a href="/login" style="color: white; text-decoration: none;">Login</a>
+            <a href="/signup" style="color: white; text-decoration: none;">Sign Up</a>
+        {% endif %}
+    </nav>
+    -->
+
+    <main style="padding: 2rem; max-width: 800px; margin: 0 auto;">
+        {% block content %}{% endblock %}
+    </main>
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>
-
