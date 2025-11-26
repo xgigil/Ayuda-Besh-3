@@ -1,0 +1,198 @@
+<!-- templates/provider/manage_services.html -->
+{% extends "base.html" %}
+
+{% block title %}Manage Services - AyudaBesh{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h1>Manage Your Services</h1>
+        <button onclick="window.location.href='/provider/dashboard'" 
+                style="background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 4px;">
+            ← Back to Dashboard
+        </button>
+    </div>
+
+    <!-- Service Management Form -->
+    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3>Your Service Profile</h3>
+        
+        <div style="margin: 20px 0;">
+            <label style="display: block; margin-bottom: 8px;">Service Categories (Select all that apply):</label>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" name="services" value="cleaning"> 
+                    <span style="margin-left: 8px;">Domestic Cleaning</span>
+                </label>
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" name="services" value="plumbing"> 
+                    <span style="margin-left: 8px;">Plumbing</span>
+                </label>
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" name="services" value="electrical"> 
+                    <span style="margin-left: 8px;">Electrical Work</span>
+                </label>
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" name="services" value="pest_control"> 
+                    <span style="margin-left: 8px;">Pest Control</span>
+                </label>
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" name="services" value="appliance"> 
+                    <span style="margin-left: 8px;">Appliance Installation</span>
+                </label>
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" name="services" value="maintenance"> 
+                    <span style="margin-left: 8px;">General Maintenance</span>
+                </label>
+            </div>
+        </div>
+
+        <div style="margin: 20px 0;">
+            <label for="hourlyRate" style="display: block; margin-bottom: 8px;">Hourly Rate (₱):</label>
+            <input type="number" id="hourlyRate" value="500" min="100" max="5000" 
+                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+
+        <div style="margin: 20px 0;">
+            <label for="description" style="display: block; margin-bottom: 8px;">Service Description:</label>
+            <textarea id="description" rows="4" 
+                      style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"
+                      placeholder="Describe your services, experience, and specialties...">Experienced plumber with 5+ years in residential and commercial plumbing. Licensed and insured.</textarea>
+        </div>
+
+        <div style="margin: 20px 0;">
+            <label style="display: block; margin-bottom: 8px;">Service Areas:</label>
+            <input type="text" id="serviceAreas" value="Manila, Quezon City" 
+                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"
+                   placeholder="Enter cities or areas you serve">
+        </div>
+
+        <div style="margin: 20px 0;">
+            <label style="display: block; margin-bottom: 8px;">Upload Certificates (Optional):</label>
+            <input type="file" id="certificates" multiple accept=".pdf,.jpg,.png" 
+                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            <p style="font-size: 12px; color: #666; margin-top: 5px;">Upload your professional licenses, certifications, or ID documents</p>
+        </div>
+
+        <button onclick="saveServices()" 
+                style="background: #0070f3; color: white; padding: 12px 24px; border: none; border-radius: 4px; font-size: 16px;">
+            Save Changes
+        </button>
+    </div>
+
+    <!-- Current Services Display -->
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 30px;">
+        <h3>Currently Offered Services</h3>
+        <div id="currentServices" style="margin-top: 15px;">
+            <p>Loading your current services...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// Load current provider profile
+async function loadProviderProfile() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) return;
+        
+        // Check the services
+        if (user.services_offered) {
+            user.services_offered.forEach(service => {
+                const checkbox = document.querySelector(`input[name="services"][value="${service}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
+        
+        if (user.hourly_rate) {
+            document.getElementById('hourlyRate').value = user.hourly_rate;
+        }
+        
+        if (user.location) {
+            document.getElementById('serviceAreas').value = user.location;
+        }
+        
+        if (user.description) {
+            document.getElementById('description').value = user.description;
+        }
+        
+        // Display current services
+        displayCurrentServices(user.services_offered || []);
+        
+    } catch (error) {
+        console.error('Error loading provider profile:', error);
+    }
+}
+
+function displayCurrentServices(services) {
+    if (services.length === 0) {
+        document.getElementById('currentServices').innerHTML = '<p>No services selected yet.</p>';
+        return;
+    }
+    
+    const serviceNames = {
+        'cleaning': 'Domestic Cleaning',
+        'plumbing': 'Plumbing',
+        'electrical': 'Electrical Work',
+        'pest_control': 'Pest Control',
+        'appliance': 'Appliance Installation',
+        'maintenance': 'General Maintenance'
+    };
+    
+    let html = '<div style="display: flex; flex-wrap: wrap; gap: 10px;">';
+    services.forEach(service => {
+        html += `<span style="background: #0070f3; color: white; padding: 6px 12px; border-radius: 16px; font-size: 12px;">${serviceNames[service]}</span>`;
+    });
+    html += '</div>';
+    document.getElementById('currentServices').innerHTML = html;
+}
+
+async function saveServices() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('Please log in first');
+        return;
+    }
+    
+    // Get selected services
+    const selectedServices = [];
+    document.querySelectorAll('input[name="services"]:checked').forEach(checkbox => {
+        selectedServices.push(checkbox.value);
+    });
+    
+    if (selectedServices.length === 0) {
+        alert('Please select at least one service');
+        return;
+    }
+    
+    const hourlyRate = document.getElementById('hourlyRate').value;
+    const serviceAreas = document.getElementById('serviceAreas').value;
+    const description = document.getElementById('description').value;
+    
+    try {
+        // In a real app, you'd send this to your API
+        const user = JSON.parse(localStorage.getItem('user'));
+        user.services_offered = selectedServices;
+        user.hourly_rate = parseInt(hourlyRate);
+        user.location = serviceAreas;
+        user.description = description;
+        
+        // Update localStorage
+        localStorage.setItem('user', JSON.stringify(user));
+        
+        alert('Services updated successfully!');
+        window.location.href = '/provider/dashboard';
+        
+    } catch (error) {
+        console.error('Error saving services:', error);
+        alert('Failed to save services. Please try again.');
+    }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', loadProviderProfile);
+</script>
+{% endblock %}

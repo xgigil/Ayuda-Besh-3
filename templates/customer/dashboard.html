@@ -1,17 +1,166 @@
 <!-- templates/customer/dashboard.html -->
 {% extends "base.html" %}
 
-{% block title %}Customer Dashboard{% endblock %}
+{% block title %}Customer Dashboard - AyudaBesh{% endblock %}
 
 {% block content %}
-<div style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; justify-content: space-between;">
-    <div>
-        <h2>Customer Dashboard</h2>
+<div style="max-width: 1000px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h1>Customer Dashboard</h1>
+        <div>
+            <button onclick="window.location.href='/customer/book-service'" 
+                    style="background: #0070f3; color: white; padding: 12px 24px; border: none; border-radius: 4px; margin-right: 10px;">
+                + Book Service
+            </button>
+            <button onclick="logout()" 
+                    style="background: #d9534f; color: white; padding: 12px 24px; border: none; border-radius: 4px;">
+                Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Welcome Section -->
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
         <script>
             const user = JSON.parse(localStorage.getItem('user') || 'null');
-            if (user) document.write(`<p>Hello, <strong>${user.username}</strong>!</p>`);
+            if (user) {
+                document.write(`
+                    <h2>Hello, <strong>${user.fullName}</strong>!</h2>
+                    <p>You're logged in as a <em>customer</em>. Browse our services and book trusted professionals.</p>
+                `);
+            }
         </script>
     </div>
-    <button onclick="logout()" style="background: #d9534f; color: white; border: none; padding: 8px 16px; border-radius: 4px;">Logout</button>
+
+    <!-- Quick Actions -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px;">
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3>🏠 Book Services</h3>
+            <p>Domestic cleaning, plumbing, electrical work, pest control, appliance installation, and general maintenance.</p>
+            <button onclick="window.location.href='/customer/book-service'" 
+                    style="background: #28a745; color: white; padding: 8px 16px; border: none; border-radius: 4px; margin-top: 10px;">
+                Browse Services
+            </button>
+        </div>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3>📅 My Bookings</h3>
+            <p>View your booking history, track current requests, and manage appointments.</p>
+            <button onclick="window.location.href='/customer/booking-history'" 
+                    style="background: #17a2b8; color: white; padding: 8px 16px; border: none; border-radius: 4px; margin-top: 10px;">
+                View History
+            </button>
+        </div>
+    </div>
+
+    <!-- Current Bookings Section -->
+    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3>Current Bookings</h3>
+        <div id="currentBookings" style="margin-top: 20px;">
+            <p>Loading your bookings...</p>
+        </div>
+    </div>
 </div>
+
+<script>
+// Load current bookings
+async function loadBookings() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const response = await fetch('/api/my-bookings', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const bookings = await response.json();
+            displayBookings(bookings);
+        } else {
+            document.getElementById('currentBookings').innerHTML = '<p>No active bookings found.</p>';
+        }
+    } catch (error) {
+        console.error('Error loading bookings:', error);
+        document.getElementById('currentBookings').innerHTML = '<p>Failed to load bookings. Please try again.</p>';
+    }
+}
+
+function displayBookings(bookings) {
+    if (bookings.length === 0) {
+        document.getElementById('currentBookings').innerHTML = '<p>No active bookings found.</p>';
+        return;
+    }
+    
+    let html = '<div style="display: grid; gap: 15px;">';
+    bookings.forEach(booking => {
+        // Format date
+        const bookingDate = new Date(booking.booking_time);
+        const formattedDate = bookingDate.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        // Status styling
+        let statusColor = '#6c757d';
+        if (booking.status === 'accepted') statusColor = '#28a745';
+        else if (booking.status === 'completed') statusColor = '#17a2b8';
+        else if (booking.status === 'pending') statusColor = '#ffc107';
+        
+        html += `
+            <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h4 style="margin: 0 0 10px 0; color: #333;">${booking.service_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</h4>
+                        <p><strong>Provider:</strong> ${booking.provider_name || 'Not assigned'}</p>
+                        <p><strong>Date & Time:</strong> ${formattedDate}</p>
+                        <p><strong>Price:</strong> ₱${booking.price}</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="background: ${statusColor}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">
+                            ${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                        </span>
+                        ${booking.status === 'accepted' ? 
+                            `<button onclick="completeBooking('${booking._id}')" 
+                                     style="margin-top: 10px; background: #17a2b8; color: white; padding: 6px 12px; border: none; border-radius: 4px; font-size: 12px;">
+                                Mark as Completed
+                            </button>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    document.getElementById('currentBookings').innerHTML = html;
+}
+
+async function completeBooking(bookingId) {
+    if (!confirm('Mark this booking as completed?')) return;
+    
+    const token = localStorage.getItem('token');
+    try {
+        const response = await fetch(`/api/${bookingId}/complete`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            alert('Booking marked as completed!');
+            loadBookings(); // Refresh
+        } else {
+            const error = await response.json();
+            alert('Error: ' + (error.error || 'Failed to complete booking'));
+        }
+    } catch (error) {
+        alert('Network error. Please try again.');
+    }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    loadBookings();
+});
+</script>
 {% endblock %}

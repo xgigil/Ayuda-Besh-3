@@ -1,41 +1,231 @@
 <!-- templates/provider/dashboard.html -->
 {% extends "base.html" %}
 
-{% block title %}Provider Dashboard{% endblock %}
+{% block title %}Provider Dashboard - AyudaBesh{% endblock %}
 
 {% block content %}
-<div style="
-    background: white;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    margin-bottom: 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-">
-    <div>
-        <h2>Provider Dashboard</h2>
+<div style="max-width: 1000px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h1>Provider Dashboard</h1>
+        <div>
+            <button onclick="window.location.href='/provider/manage-services'" 
+                    style="background: #0070f3; color: white; padding: 12px 24px; border: none; border-radius: 4px; margin-right: 10px;">
+                Manage Services
+            </button>
+            <button onclick="window.location.href='/provider/job-requests'" 
+                    style="background: #17a2b8; color: white; padding: 12px 24px; border: none; border-radius: 4px; margin-right: 10px;">
+                Job Requests
+            </button>
+            <button onclick="logout()" 
+                    style="background: #d9534f; color: white; padding: 12px 24px; border: none; border-radius: 4px;">
+                Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Welcome Section -->
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
         <script>
             const user = JSON.parse(localStorage.getItem('user') || 'null');
             if (user) {
+                const verifiedStatus = user.is_verified ? 
+                    '<span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; margin-left: 8px;">Verified ✅</span>' :
+                    '<span style="background: #ffc107; color: #333; padding: 4px 8px; border-radius: 12px; font-size: 12px; margin-left: 8px;">Pending Verification</span>';
+                
                 document.write(`
-                    <p>Hello, <strong>${user.username}</strong>! You're logged in as a <em>provider</em>.</p>
+                    <h2>Hello, <strong>${user.fullName}</strong>! ${verifiedStatus}</h2>
+                    <p>You're logged in as a <em>service provider</em>. Manage your services, accept job requests, and track your earnings.</p>
+                    ${!user.is_verified ? '<p style="color: #856404; background: #fff3cd; padding: 10px; border-radius: 4px; margin-top: 10px;"><strong>⚠️ Your account is pending verification.</strong> Our admin team will review your documents shortly.</p>' : ''}
                 `);
             }
         </script>
     </div>
-    <button onclick="logout()" 
-            style="background: #d9534f; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
-        Logout
-    </button>
+
+    <!-- Provider Stats -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center;">
+            <h3 style="margin: 0 0 10px 0; color: #0070f3;">₱<span id="totalEarnings">0</span></h3>
+            <p>Total Earnings</p>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4; text-align: center;">
+            <h3 style="margin: 0 0 10px 0; color: #28a745;"><span id="completedJobs">0</span></h3>
+            <p>Completed Jobs</p>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2; text-align: center;">
+            <h3 style="margin: 0 0 10px 0; color: #17a2b8;"><span id="avgRating">0</span>/5</h3>
+            <p>Average Rating</p>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2; text-align: center;">
+            <h3 style="margin: 0 0 10px 0; color: #ffc107;"><span id="pendingRequests">0</span></h3>
+            <p>Pending Requests</p>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px;">
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3>💼 Job Requests</h3>
+            <p>View and respond to customer service requests.</p>
+            <button onclick="window.location.href='/provider/job-requests'" 
+                    style="background: #17a2b8; color: white; padding: 8px 16px; border: none; border-radius: 4px; margin-top: 10px;">
+                View Requests
+            </button>
+        </div>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3>📅 My Availability</h3>
+            <p>Set your working hours and availability calendar.</p>
+            <button onclick="alert('Feature coming soon!')" 
+                    style="background: #28a745; color: white; padding: 8px 16px; border: none; border-radius: 4px; margin-top: 10px;">
+                Set Availability
+            </button>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3>Recent Activity</h3>
+        <div id="recentActivity" style="margin-top: 20px;">
+            <p>Loading your recent activity...</p>
+        </div>
+    </div>
 </div>
 
-<div style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-    <h3>Quick Actions</h3>
-    <button onclick="alert('Coming soon: View available requests!')" 
-            style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-top: 10px;">
-        View Requests
-    </button>
-</div>
+<script>
+// Load provider stats and activity
+async function loadProviderData() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        // Load all bookings for this provider
+        const response = await fetch('/api/my-bookings', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const bookings = await response.json();
+            updateStats(bookings);
+            displayRecentActivity(bookings);
+        } else {
+            document.getElementById('recentActivity').innerHTML = '<p>No activity found.</p>';
+        }
+    } catch (error) {
+        console.error('Error loading provider ', error);
+        document.getElementById('recentActivity').innerHTML = '<p>Failed to load data. Please try again.</p>';
+    }
+}
+
+function updateStats(bookings) {
+    const completedJobs = bookings.filter(b => b.status === 'completed');
+    const totalEarnings = completedJobs.reduce((sum, b) => sum + b.price, 0);
+    const pendingRequests = bookings.filter(b => b.status === 'pending').length;
+    
+    // Calculate average rating (assuming ratings are stored in bookings)
+    let totalRating = 0;
+    let ratingCount = 0;
+    completedJobs.forEach(booking => {
+        if (booking.rating) {
+            totalRating += booking.rating;
+            ratingCount++;
+        }
+    });
+    const avgRating = ratingCount > 0 ? (totalRating / ratingCount).toFixed(1) : '0';
+    
+    document.getElementById('totalEarnings').textContent = totalEarnings.toLocaleString();
+    document.getElementById('completedJobs').textContent = completedJobs.length;
+    document.getElementById('avgRating').textContent = avgRating;
+    document.getElementById('pendingRequests').textContent = pendingRequests;
+}
+
+function displayRecentActivity(bookings) {
+    if (bookings.length === 0) {
+        document.getElementById('recentActivity').innerHTML = '<p>No recent activity.</p>';
+        return;
+    }
+    
+    // Sort by date (newest first) and take top 5
+    const recentBookings = [...bookings]
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 5);
+    
+    let html = '<div style="display: grid; gap: 15px;">';
+    recentBookings.forEach(booking => {
+        const bookingDate = new Date(booking.created_at);
+        const formattedDate = bookingDate.toLocaleDateString('en-US', {
+            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+        
+        let statusColor = '#6c757d';
+        if (booking.status === 'accepted') statusColor = '#28a745';
+        else if (booking.status === 'completed') statusColor = '#17a2b8';
+        else if (booking.status === 'pending') statusColor = '#ffc107';
+        
+        html += `
+            <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h4 style="margin: 0 0 8px 0; color: #333;">${booking.service_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</h4>
+                        <p><strong>Customer:</strong> ${booking.customer_name || 'Anonymous'}</p>
+                        <p><strong>Date:</strong> ${formattedDate}</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="background: ${statusColor}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">
+                            ${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                        </span>
+                        ${booking.status === 'pending' ? 
+                            `<div style="margin-top: 8px;">
+                                <button onclick="acceptBooking('${booking._id}')" 
+                                        style="background: #28a745; color: white; padding: 4px 8px; border: none; border-radius: 4px; font-size: 12px; margin-right: 5px;">
+                                    Accept
+                                </button>
+                                <button onclick="declineBooking('${booking._id}')" 
+                                        style="background: #d9534f; color: white; padding: 4px 8px; border: none; border-radius: 4px; font-size: 12px;">
+                                    Decline
+                                </button>
+                            </div>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    document.getElementById('recentActivity').innerHTML = html;
+}
+
+async function acceptBooking(bookingId) {
+    if (!confirm('Accept this booking request?')) return;
+    
+    const token = localStorage.getItem('token');
+    try {
+        const response = await fetch(`/api/${bookingId}/accept`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            alert('Booking accepted! The customer has been notified.');
+            loadProviderData(); // Refresh
+        } else {
+            const error = await response.json();
+            alert('Error: ' + (error.error || 'Failed to accept booking'));
+        }
+    } catch (error) {
+        alert('Network error. Please try again.');
+    }
+}
+
+async function declineBooking(bookingId) {
+    if (!confirm('Decline this booking request?')) return;
+    
+    // In a real app, you'd have a decline endpoint
+    alert('Feature coming soon: Decline requests');
+    loadProviderData();
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    loadProviderData();
+});
+</script>
 {% endblock %}

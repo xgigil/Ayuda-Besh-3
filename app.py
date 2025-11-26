@@ -2,7 +2,6 @@
 import os
 from dotenv import load_dotenv
 
-# Load .env from the same folder as this file (robust)
 env_path = os.path.join(os.path.dirname(__file__), '.env')
 load_dotenv(env_path)
 
@@ -37,15 +36,26 @@ from lib.mongodb import init_db
 from routes.auth import auth_bp
 from routes.requests import requests_bp
 from routes.frontend import frontend_bp
+# ✅ NEW BLUEPRINTS
+from routes.services import services_bp
+from routes.bookings import bookings_bp
+from routes.admin import admin_bp
 
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
     CORS(app, origins="*", supports_credentials=True)
     init_db(app)
+    
+    # Register all blueprints
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(requests_bp, url_prefix='/api/requests')
     app.register_blueprint(frontend_bp)
+    # ✅ NEW BLUEPRINTS
+    app.register_blueprint(services_bp, url_prefix='/api')
+    app.register_blueprint(bookings_bp, url_prefix='/api')
+    app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    
     @app.route('/health')
     def health_check():
         return jsonify({'status': 'ok', 'message': 'AyudaBesh API is running'}), 200

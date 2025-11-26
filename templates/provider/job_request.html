@@ -1,0 +1,119 @@
+<!-- templates/provider/job_requests.html -->
+{% extends "base.html" %}
+
+{% block title %}Job Requests - AyudaBesh{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h1>Job Requests</h1>
+        <button onclick="window.location.href='/provider/dashboard'" 
+                style="background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 4px;">
+            ← Back to Dashboard
+        </button>
+    </div>
+
+    <div id="jobRequests" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <p>Loading your job requests...</p>
+    </div>
+</div>
+
+<script>
+async function loadJobRequests() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const response = await fetch('/api/my-bookings', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const bookings = await response.json();
+            const pendingRequests = bookings.filter(b => b.status === 'pending');
+            displayJobRequests(pendingRequests);
+        } else {
+            document.getElementById('jobRequests').innerHTML = '<p>No job requests found.</p>';
+        }
+    } catch (error) {
+        console.error('Error loading job requests:', error);
+        document.getElementById('jobRequests').innerHTML = '<p>Failed to load job requests. Please try again.</p>';
+    }
+}
+
+function displayJobRequests(bookings) {
+    if (bookings.length === 0) {
+        document.getElementById('jobRequests').innerHTML = '<p>No pending job requests.</p>';
+        return;
+    }
+    
+    let html = '<div style="display: grid; gap: 20px;">';
+    bookings.forEach(booking => {
+        const bookingDate = new Date(booking.booking_time);
+        const formattedDate = bookingDate.toLocaleDateString('en-US', {
+            year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
+        
+        html += `
+            <div style="border: 2px solid #ffc107; padding: 20px; border-radius: 8px; background: #fff8e1;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="flex: 1;">
+                        <h3 style="margin: 0 0 15px 0; color: #856404;">${booking.service_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</h3>
+                        <p><strong>Customer:</strong> ${booking.customer_name || 'Anonymous'}</p>
+                        <p><strong>Requested Time:</strong> ${formattedDate}</p>
+                        <p><strong>Price Offered:</strong> ₱${booking.price}</p>
+                        <p><strong>Location:</strong> ${booking.customer_location || 'Not specified'}</p>
+                    </div>
+                    <div style="text-align: right; min-width: 120px;">
+                        <button onclick="acceptBooking('${booking._id}')" 
+                                style="background: #28a745; color: white; padding: 8px 16px; border: none; border-radius: 4px; margin-bottom: 8px; width: 100%;">
+                            Accept
+                        </button>
+                        <button onclick="declineBooking('${booking._id}')" 
+                                style="background: #d9534f; color: white; padding: 8px 16px; border: none; border-radius: 4px; width: 100%;">
+                            Decline
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    document.getElementById('jobRequests').innerHTML = html;
+}
+
+async function acceptBooking(bookingId) {
+    if (!confirm('Accept this job request?')) return;
+    
+    const token = localStorage.getItem('token');
+    try {
+        const response = await fetch(`/api/${bookingId}/accept`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            alert('Job request accepted!');
+            loadJobRequests(); // Refresh
+        } else {
+            const error = await response.json();
+            alert('Error: ' + (error.error || 'Failed to accept request'));
+        }
+    } catch (error) {
+        alert('Network error. Please try again.');
+    }
+}
+
+function declineBooking(bookingId) {
+    if (!confirm('Decline this job request?')) return;
+    // In real app: call decline endpoint
+    alert('Feature coming soon: Decline requests');
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    loadJobRequests();
+});
+</script>
+{% endblock %}

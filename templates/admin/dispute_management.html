@@ -1,0 +1,132 @@
+<!-- templates/admin/dispute_management.html -->
+{% extends "base.html" %}
+
+{% block title %}Dispute Management - AyudaBesh{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h1>Dispute Management</h1>
+        <button onclick="window.location.href='/admin/dashboard'" 
+                style="background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 4px;">
+            ← Back to Dashboard
+        </button>
+    </div>
+
+    <div id="disputes" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3>Open Disputes</h3>
+        <p>Loading disputes...</p>
+    </div>
+
+    <div id="resolvedDisputes" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 20px;">
+        <h3>Resolved Disputes</h3>
+        <p>Loading resolved disputes...</p>
+    </div>
+</div>
+
+<script>
+async function loadDisputes() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        // Mock open disputes
+        const openDisputesHtml = `
+            <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                <thead>
+                    <tr style="background: #f8f9fa;">
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Booking ID</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Customer</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Provider</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Issue</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 12px;">BK789</td>
+                        <td style="padding: 12px;">Maria Santos</td>
+                        <td style="padding: 12px;">John Dela Cruz</td>
+                        <td style="padding: 12px;">Provider didn't show up</td>
+                        <td style="padding: 12px;">
+                            <button onclick="resolveDispute('dispute123')" 
+                                    style="background: #28a745; color: white; padding: 6px 12px; border: none; border-radius: 4px; font-size: 12px; margin-right: 5px;">
+                                Resolve
+                            </button>
+                            <button onclick="escalateDispute('dispute123')" 
+                                    style="background: #ffc107; color: #333; padding: 6px 12px; border: none; border-radius: 4px; font-size: 12px;">
+                                Escalate
+                            </button>
+                        </td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 12px;">BK790</td>
+                        <td style="padding: 12px;">Carlos Reyes</td>
+                        <td style="padding: 12px;">Anna Lim</td>
+                        <td style="padding: 12px;">Poor quality work</td>
+                        <td style="padding: 12px;">
+                            <button onclick="resolveDispute('dispute456')" 
+                                    style="background: #28a745; color: white; padding: 6px 12px; border: none; border-radius: 4px; font-size: 12px; margin-right: 5px;">
+                                Resolve
+                            </button>
+                            <button onclick="escalateDispute('dispute456')" 
+                                    style="background: #ffc107; color: #333; padding: 6px 12px; border: none; border-radius: 4px; font-size: 12px;">
+                                Escalate
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+        
+        // Mock resolved disputes
+        const resolvedDisputesHtml = `
+            <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                <thead>
+                    <tr style="background: #f8f9fa;">
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Booking ID</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Resolution</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Resolved By</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 12px;">BK788</td>
+                        <td style="padding: 12px;">Full refund to customer</td>
+                        <td style="padding: 12px;">Admin User</td>
+                        <td style="padding: 12px;">Nov 26, 2025</td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+        
+        document.getElementById('disputes').innerHTML = '<h3>Open Disputes</h3>' + openDisputesHtml;
+        document.getElementById('resolvedDisputes').innerHTML = '<h3>Resolved Disputes</h3>' + resolvedDisputesHtml;
+    } catch (error) {
+        console.error('Error loading disputes:', error);
+    }
+}
+
+async function resolveDispute(disputeId) {
+    if (!confirm('Resolve this dispute?')) return;
+    
+    const token = localStorage.getItem('token');
+    try {
+        // In real app, you'd call your dispute resolution API
+        alert('Dispute resolved successfully!');
+        loadDisputes();
+    } catch (error) {
+        alert('Network error. Please try again.');
+    }
+}
+
+function escalateDispute(disputeId) {
+    if (!confirm('Escalate this dispute to senior admin?')) return;
+    alert('Dispute escalated successfully!');
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', loadDisputes);
+</script>
+{% endblock %}

@@ -1,0 +1,157 @@
+<!-- templates/customer/book_service.html -->
+{% extends "base.html" %}
+
+{% block title %}Book Service - AyudaBesh{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <h2>Book a Service</h2>
+    
+    <div style="margin: 20px 0;">
+        <label for="serviceType" style="display: block; margin-bottom: 8px;">Select Service:</label>
+        <select id="serviceType" style="width: 100%; padding: 10px; font-size: 16px;">
+            <option value="">Choose a service</option>
+            <option value="cleaning">Domestic Cleaning</option>
+            <option value="plumbing">Plumbing</option>
+            <option value="electrical">Electrical Work</option>
+            <option value="pest_control">Pest Control</option>
+            <option value="appliance">Appliance Installation</option>
+            <option value="maintenance">General Maintenance</option>
+        </select>
+    </div>
+    
+    <div id="providersList" style="margin-top: 30px;">
+        <p>Select a service to see available providers</p>
+    </div>
+    
+    <div id="bookingForm" style="display: none; margin-top: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+        <h3>Confirm Booking</h3>
+        <input type="hidden" id="selectedProviderId">
+        <input type="hidden" id="selectedService">
+        
+        <div style="margin: 15px 0;">
+            <label>Booking Date & Time:</label>
+            <input type="datetime-local" id="bookingTime" style="width: 100%; padding: 10px;" required>
+        </div>
+        
+        <div style="margin: 15px 0;">
+            <label>Price: <span id="bookingPrice">₱500</span></label>
+        </div>
+        
+        <button onclick="confirmBooking()" style="background: #0070f3; color: white; padding: 12px 24px; border: none; border-radius: 4px; font-size: 16px; cursor: pointer;">
+            Confirm Booking
+        </button>
+    </div>
+</div>
+
+<script>
+let selectedProvider = null;
+
+async function loadProviders() {
+    const service = document.getElementById('serviceType').value;
+    if (!service) {
+        document.getElementById('providersList').innerHTML = '<p>Select a service to see available providers</p>';
+        return;
+    }
+    
+    try {
+        // ✅ Get token from localStorage
+        const token = localStorage.getItem('token');
+        const headers = token ? {'Authorization': `Bearer ${token}`} : {};
+        
+        const response = await fetch(`/api/providers?service=${service}`, {headers});
+        const providers = await response.json();
+        
+        if (providers.length === 0) {
+            document.getElementById('providersList').innerHTML = '<p>No verified providers available for this service</p>';
+            return;
+        }
+        
+        let html = '<h3>Available Verified Providers:</h3>';
+        providers.forEach(provider => {
+            // ✅ Show verification badge
+            const verifiedBadge = provider.is_verified ? '<span style="background: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-size: 12px; margin-left: 8px;">Verified</span>' : '';
+            const rating = provider.rating ? `⭐ ${provider.rating}/5` : 'No ratings yet';
+            html += `
+                <div style="border: 1px solid #ddd; padding: 20px; margin: 15px 0; border-radius: 8px; cursor: pointer;" 
+                     onclick="selectProvider('${provider._id}', '${provider.fullName}', ${provider.hourly_rate || 500})">
+                    <h4>${provider.fullName}${verifiedBadge}</h4>
+                    <p><strong>Service:</strong> ${service.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
+                    <p><strong>Price:</strong> ₱${provider.hourly_rate || 500}/hr</p>
+                    <p><strong>Rating:</strong> ${rating}</p>
+                    <p><strong>Location:</strong> ${provider.location || 'Not specified'}</p>
+                </div>
+            `;
+        });
+        document.getElementById('providersList').innerHTML = html;
+    } catch (error) {
+        console.error('Error loading providers:', error);
+        document.getElementById('providersList').innerHTML = '<p>Failed to load providers. Please try again.</p>';
+    }
+}
+
+function selectProvider(providerId, fullName, price) {
+    selectedProvider = { id: providerId, name: fullName, price: price };
+    document.getElementById('selectedProviderId').value = providerId;
+    document.getElementById('selectedService').value = document.getElementById('serviceType').value;
+    document.getElementById('bookingPrice').textContent = `₱${price}`;
+    document.getElementById('bookingForm').style.display = 'block';
+}
+
+async function confirmBooking() {
+    const bookingTime = document.getElementById('bookingTime').value;
+    if (!bookingTime) {
+        alert('Please select a booking time');
+        return;
+    }
+    
+    const user = JSON.parse(localStorage.getItem('user'));
+    const token = localStorage.getItem('token');
+    
+    if (!user || !token) {
+        alert('Please log in first');
+        window.location.href = '/login';
+        return;
+    }
+    
+    try {
+        // ✅ Convert datetime-local to ISO format
+        const isoDateTime = new Date(bookingTime).toISOString();
+        
+        const response = await fetch('/api/book', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`  // ✅ Send auth token
+            },
+            body: JSON.stringify({
+                customer_id: user.id,
+                provider_id: selectedProvider.id,
+                service_type: document.getElementById('selectedService').value,
+                booking_time: isoDateTime,  // ✅ ISO format
+                price: selectedProvider.price
+            })
+        });
+        
+        const result = await response.json();
+        if (response.ok) {
+            alert('Booking confirmed! Your provider will be notified.');
+            window.location.href = '/customer/dashboard';
+        } else {
+            const errorMsg = result.error || 'Booking failed. Please try again.';
+            alert('Booking failed: ' + errorMsg);
+            // ✅ Handle specific errors
+            if (errorMsg.includes('Token')) {
+                window.location.href = '/login';
+            }
+        }
+    } catch (error) {
+        console.error('Booking error:', error);
+        alert('Network error. Please check your connection and try again.');
+    }
+}
+
+// Initialize
+document.getElementById('serviceType').addEventListener('change', loadProviders);
+</script>
+{% endblock %}

@@ -1,3 +1,5 @@
+# lib/mongodb.py
+
 from pymongo import MongoClient
 from flask import Flask
 import os
@@ -10,15 +12,24 @@ def init_db(app: Flask):
     
     try:
         uri = os.getenv('MONGODB_URI')
-        db_name = os.getenv('MONGODB_DB_NAME', 'ayudabesh')
         
         if not uri:
             raise ValueError("MONGODB_URI is not set in environment variables")
         
+        # Extract database name from URI or use default
+        if '/ayudabesh' in uri:
+            db_name = 'ayudabesh'
+        else:
+            # If URI doesn't specify database, use ayudabesh as default
+            db_name = 'ayudabesh'
+            # Append database name to URI if not present
+            if uri.endswith('/') or ':' in uri.split('/')[-1]:
+                uri = uri.rstrip('/') + '/ayudabesh'
+        
         client = MongoClient(uri)
         db = client[db_name]
         client.admin.command('ping')
-        print("✅ Successfully connected to MongoDB")
+        print(f"✅ Successfully connected to MongoDB database: {db_name}")
         
     except Exception as e:
         print(f"❌ Error connecting to MongoDB: {e}")
