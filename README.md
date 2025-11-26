@@ -34,7 +34,7 @@ Functional endpoints for Users and Requests
 - **Checklists:**  
   - [x] Implement User endpoints: create, read, update, delete  
   - [x] Implement Request endpoints: create, read, update, delete  
-  - [ ] Test endpoints with Postman  
+  - [x] Test endpoints with Postman  
   - [ ] Commit & push changes  
 
 ---
@@ -49,7 +49,7 @@ Login system and search/filter functionality implemented
 - **Checklists:**  
   - [x] Implement login with username/password 
   - [x] Add search/filter functionality for Requests by type or status  
-  - [ ] Test new features with Postman 
+  - [x] Test new features with Postman 
   - [ ] Commit & push changes  
 
 ---
