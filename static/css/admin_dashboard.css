@@ -1,0 +1,106 @@
+/* DASHBOARD LAYOUT */
+.admin-dashboard {
+    display: grid;
+    grid-template-areas:
+        "header header"
+        "sidebar main";
+    grid-template-columns: 1fr; /* Thinner sidebar */
+    grid-template-rows: 60px 1fr;      /* Header height fixed */
+    height: 100vh;
+}
+
+/* HEADER */
+.dashboard-header {
+    grid-area: header;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    box-sizing: border-box;
+}
+
+/* LOGO AND BUTTONS */
+.logo {
+    height: 50px;
+    width: auto;
+}
+
+.logout-button {
+    background-color: #d9534f;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* SIDEBAR */
+.sidebar {
+    grid-area: sidebar;
+    position: fixed;       /* Fixed position */
+    top: 60px;             /* Below header */
+    left: 0;
+    width: 100px;          /* Thinner */
+    bottom: 0;
+    background-color: #eeeeee;
+    padding: 10px;
+    border-right: 1px solid #ddd;
+    overflow-y: auto;      /* Scroll if content too long */
+    box-sizing: border-box;
+}
+
+/* MAIN SECTION */
+.dashboard-main {
+    grid-area: main;
+    margin-left: 200px;    /* Same as sidebar width */
+    margin-top: 60px;      /* Same as header height */
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 20px;
+    overflow-y: auto;      /* Scrollable main content */
+    height: calc(100vh - 60px); /* Full height minus header */
+}
+
+/* BOXES */
+.provider-verification {
+    grid-column: 1;
+    grid-row: 1;
+    background: white;
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 6px;
+}
+
+.dispute_reports {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    gap: 20px;
+}
+
+.dispute-management,
+.reports {
+    background: white;
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 6px;
+}
+
+/* BUTTONS */
+button {
+    margin-top: 15px;
+    padding: 10px 18px;
+    background-color: #007bff;
+    border: none;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+}

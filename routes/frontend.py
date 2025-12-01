@@ -51,6 +51,7 @@ def manage_services():
 
 # ✅ ADMIN ROUTES
 @frontend_bp.route('/admin/dashboard')
+@token_required
 @admin_required
 def admin_dashboard():
     return render_template('admin/dashboard.html')

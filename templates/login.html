@@ -59,6 +59,14 @@
                     />
                     Provider
                 </label>
+                <label>
+                    <input
+                        type="radio"
+                        name="role"
+                        value="admin"
+                    />
+                    Admin
+                </label>
             </div>
 
             <button type="submit" class="login-button" id="loginButton">
@@ -120,10 +128,19 @@ try {
             
             localStorage.setItem('user', JSON.stringify(data.user));
             localStorage.setItem('token', data.token);
-            
-            const redirectUrl = formData.role === 'customer' ? '/customer/dashboard' : '/provider/dashboard';
-            console.log(`➡️ Redirecting to ${redirectUrl}`);
-            window.location.href = redirectUrl;
+
+            if (response.ok) {
+                const redirectMap = {
+                    customer: '/customer/dashboard',
+                    provider: '/provider/dashboard',
+                    admin: '/admin/dashboard'
+                };
+
+                const redirectUrl = redirectMap[formData.role];
+                console.log(`➡️ Redirecting to ${redirectUrl}`);
+                window.location.href = redirectUrl;
+            }
+
             
         } catch (err) {
             errorDiv.textContent = 'Network error: ' + (err.message || 'Please try again');
